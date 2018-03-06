@@ -1,0 +1,73 @@
+/*
+ * Copyright 2018 Jan Dittberner
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+buildscript {
+    repositories {
+        mavenCentral()
+        jcenter()
+    }
+    dependencies {
+        classpath("org.springframework.boot:spring-boot-gradle-plugin:2.0.0.RELEASE")
+        classpath("com.bmuschko:gradle-docker-plugin:3.2.5")
+    }
+}
+
+apply plugin: 'java'
+apply plugin: 'eclipse'
+apply plugin: 'idea'
+apply plugin: 'org.springframework.boot'
+apply plugin: 'io.spring.dependency-management'
+apply plugin: 'com.bmuschko.docker-remote-api'
+
+bootJar {
+    baseName = 'spring-boot-vault-demo'
+    version = '0.1.0'
+}
+
+repositories {
+    mavenCentral()
+}
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+dependencies {
+    compile("org.springframework.boot:spring-boot-starter-web")
+    compile("org.springframework.boot:spring-boot-starter-actuator")
+    testCompile("org.springframework.boot:spring-boot-starter-test")
+}
+
+import com.bmuschko.gradle.docker.tasks.image.Dockerfile
+
+task createDockerfile(type: Dockerfile) {
+    destFile = project.file('build/docker/Dockerfile')
+    from 'openjdk:8-jre-alpine'
+    maintainer "Jan Dittberner <jan.dittberner@t-systems.com>"
+    runCommand 'apk --update --no-cache add curl'
+    copyFile bootJar.archiveName, '/app/spring-boot-vault-demo.jar'
+    entryPoint 'java'
+    defaultCommand '-jar', '/app/spring-boot-vault-demo.jar'
+    exposePort 8080
+    instruction 'HEALTHCHECK CMD curl -f http://localhost:8080/actuator/health || exit 1'
+}
+
+task syncArchive(type: Sync) {
+    dependsOn assemble
+    from bootJar.archivePath
+    into createDockerfile.destFile.parentFile
+}
+
+createDockerfile.dependsOn syncArchive
+build.dependsOn createDockerfile
