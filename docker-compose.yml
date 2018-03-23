@@ -1,18 +1,27 @@
 version: '3'
 services:
+    vault:
+        build:
+            context: build/docker/vault
+        image: "vault:0.9.5"
+        ports:
+            - "8200:8200"
+        cap_add:
+            - IPC_LOCK
+        volumes:
+            - "vaultlogs:/vault/logs"
+            - "vaultfile:/vault/file"
+        command: server
     web:
         build:
-            context: build/docker
+            context: build/docker/web
             args:
                 http_proxy: ${http_proxy}
         ports:
             - "8080:8080"
-    vault:
-        image: "vault:0.9.5"
-        cap_add:
-            - IPC_LOCK
-        volumes:
-            - "./vault/config:/vault/config"
-            - "./vault/logs:/vault/logs"
-            - "./vault/file:/vault/file"
-        command: server
+        depends_on:
+          - vault
+
+volumes:
+  vaultlogs:
+  vaultfile:

@@ -59,10 +59,25 @@ dependencies {
     testCompile("org.springframework.boot:spring-boot-starter-test")
 }
 
+task buildVaultCertificate(type: Exec) {
+    commandLine "openssl", "req", "-new", "-x509", "-config", project.file("vault/openssl.cnf").path, "-out", "vault/config/ssl/vault.crt.pem"
+    inputs.file project.file("vault/openssl.cnf")
+    outputs.file project.file("vault/config/ssl/vault.crt.pem")
+    outputs.file project.file("vault/config/ssl/private/vault.key.pem")
+}
+
+task buildTruststore(type: Exec, dependsOn: [processResources, buildVaultCertificate]) {
+    commandLine "keytool", "-importcert", "-noprompt", \
+        "-keystore", project.file("build/resources/main/vault-truststore.jks").path, "-storepass", "s3cr3t", \
+        "-alias", "vault", "-file", project.file("vault/config/ssl/vault.crt.pem").path
+    inputs.file project.file("vault/config/ssl/vault.crt.pem")
+    outputs.file project.file("build/resources/main/vault-truststore.jks")
+}
+
 import com.bmuschko.gradle.docker.tasks.image.Dockerfile
 
-task createDockerfile(type: Dockerfile) {
-    destFile = project.file('build/docker/Dockerfile')
+task createWebDockerfile(type: Dockerfile) {
+    destFile = project.file('build/docker/web/Dockerfile')
     from 'openjdk:8-jre-alpine'
     maintainer "Jan Dittberner <jan.dittberner@t-systems.com>"
     runCommand 'apk --update --no-cache add curl'
@@ -75,12 +90,28 @@ task createDockerfile(type: Dockerfile) {
     instruction 'HEALTHCHECK CMD curl -f http://localhost:8080/actuator/health || exit 1'
 }
 
+task createVaultDockerfile(type: Dockerfile) {
+    destFile = project.file('build/docker/vault/Dockerfile')
+    from 'vault:0.9.6'
+    maintainer "Jan Dittberner <jan.dittberner@t-systems.com>"
+    copyFile 'config', '/vault/config'
+    runCommand  'chown -R vault:vault /vault/config'
+}
+
 task syncArchive(type: Sync) {
     dependsOn assemble
     from bootJar.archivePath
     from project.file('bootstrap.yml')
-    into createDockerfile.destFile.parentFile
+    into createWebDockerfile.destFile.parentFile
 }
 
-createDockerfile.dependsOn syncArchive
-build.dependsOn createDockerfile
+task syncVaultConfig(type: Sync) {
+    dependsOn buildVaultCertificate
+    from project.file('vault/config')
+    into project.file(createVaultDockerfile.destFile.parentFile.path + "/config")
+}
+
+bootJar.dependsOn buildTruststore
+createWebDockerfile.dependsOn syncArchive
+createVaultDockerfile.dependsOn syncVaultConfig
+build.dependsOn createWebDockerfile, createVaultDockerfile
