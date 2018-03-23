@@ -17,6 +17,9 @@ buildscript {
     repositories {
         mavenCentral()
         jcenter()
+        maven {
+            url 'https://repo.spring.io/libs-milestone'
+        }
     }
     dependencies {
         classpath("org.springframework.boot:spring-boot-gradle-plugin:2.0.0.RELEASE")
@@ -43,9 +46,16 @@ repositories {
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
+dependencyManagement {
+    imports {
+        mavenBom 'org.springframework.cloud:spring-cloud-vault-dependencies:2.0.0.M6'
+    }
+}
+
 dependencies {
     compile("org.springframework.boot:spring-boot-starter-web")
     compile("org.springframework.boot:spring-boot-starter-actuator")
+    compile("org.springframework.cloud:spring-cloud-starter-vault-config")
     testCompile("org.springframework.boot:spring-boot-starter-test")
 }
 
@@ -57,7 +67,9 @@ task createDockerfile(type: Dockerfile) {
     maintainer "Jan Dittberner <jan.dittberner@t-systems.com>"
     runCommand 'apk --update --no-cache add curl'
     copyFile bootJar.archiveName, '/app/spring-boot-vault-demo.jar'
+    copyFile 'bootstrap.yml', '/app/bootstrap.yml'
     entryPoint 'java'
+    workingDir '/app'
     defaultCommand '-jar', '/app/spring-boot-vault-demo.jar'
     exposePort 8080
     instruction 'HEALTHCHECK CMD curl -f http://localhost:8080/actuator/health || exit 1'
@@ -66,6 +78,7 @@ task createDockerfile(type: Dockerfile) {
 task syncArchive(type: Sync) {
     dependsOn assemble
     from bootJar.archivePath
+    from project.file('bootstrap.yml')
     into createDockerfile.destFile.parentFile
 }
 
