@@ -272,3 +272,52 @@ server certificate.
       Protocol  : TLSv1.2
       Cipher    : ECDHE-RSA-AES256-GCM-SHA384
   ```
+  
+# Using the database secrets engine with PostgreSQL
+
+* Start the db and restart the vault container:
+  ```
+  docker-compose up db
+  docker-compose restart vault 
+  ```
+* Vault will start sealed, unseal it
+  ```
+  docker-compose exec -e VAULT_CLI_NO_COLOR=1 -e VAULT_CACERT=/vault/config/ssl/vault.crt.pem vault \
+    vault operator unseal <unseal key from vault_data.txt>
+  ```
+* Setup database and roles
+  ```
+  psql -h localhost -U postgres -d postgres -f pgsql/database_roles.sql --port 15432
+  ```
+* Enable the database secrets engine
+  ```
+  ./vault_root.sh secrets enable database
+  ```
+* Setup the connection from Vault to PostgreSQL
+  ```
+  ./vault_root.sh write database/config/demodb plugin_name=postgresql-database-plugin allowed_roles=springdemo \
+    connection_url="postgresql://vaultadmin:superinsecure@db:5432/demoapp?sslmode=disable"
+  ```
+  > You should enable SSL for your PostgreSQL server in production and set a better password for the vault user!
+* Create a database role definition for the spring demo application
+  ```
+  docker-compose exec -e VAULT_CACERT=/vault/config/ssl/vault.crt.pem -e VAULT_TOKEN=<token from vault_data.txt> \
+    vault vault write database/roles/springdemo db_name=demodb \
+    "creation_statements=CREATE ROLE \"{{name}}\" IN ROLE grp_demo_app_user LOGIN PASSWORD '{{password}}' VALID UNTIL '{{expiration}}';" \
+    default_ttl=24h max_ttl=72h
+  ```
+* Try to retrieve database credentials
+  ```
+  ./vault_root.sh read database/creds/springdemo
+  ```
+* Try to connect to PostgreSQL with these credentials
+  ```
+  psql -h localhost -U <username-from-vault-output> --port 15432 demoapp
+  ```
+* Update the ACL for the hello-application Vault policy
+  ```
+  curl -H "X-Vault-Token: <root token from vault_data.txt>" \
+    --cacert vault/config/ssl/vault.crt.pem \
+    --request PUT --data @./vault/hello-application.json \
+    https://localhost:8200/v1/sys/policy/hello-application 
+  ```

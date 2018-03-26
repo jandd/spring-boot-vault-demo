@@ -1,3 +1,1 @@
-{
-  "policy": "path \"secret/*\" {\n capabilities = [\"read\", \"list\"]\n}\n\npath \"pki/issue/server\" {\n capabilities = [\"update\"]\n}\n\npath \"pki/ca*\" {\n capabilities = [\"read\"]\n}"
-}
+{"policy": "path \"secret/*\" {\n  capabilities = [\n    \"read\",\n    \"list\"]\n}\n\npath \"pki/issue/server\" {\n  capabilities = [\n    \"update\"]\n}\n\npath \"pki/ca*\" {\n  capabilities = [\n    \"read\"]\n}\n\npath \"database/creds/springdemo\" {\n  capabilities = [\n    \"read\"]\n}"}

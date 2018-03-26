@@ -1,28 +1,41 @@
 version: '3'
 services:
-    vault:
-        build:
-            context: build/docker/vault
-        ports:
-            - "8200:8200"
-        cap_add:
-            - IPC_LOCK
-        volumes:
-            - "vaultlogs:/vault/logs"
-            - "vaultfile:/vault/file"
-        command: server
-    web:
-        build:
-            context: build/docker/web
-            args:
-                http_proxy: ${http_proxy}
-        ports:
-            - "8443:8443"
-        depends_on:
-          - vault
-        environment:
-          - SPRING_CLOUD_VAULT_APP_ROLE_SECRET_ID
+  db:
+    image: postgres
+    ports:
+      - "15432:5432"
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: insecure
+    volumes:
+      - "pgdata:/var/lib/postgresql/data"
+  vault:
+    build:
+      context: build/docker/vault
+    ports:
+      - "8200:8200"
+    cap_add:
+      - IPC_LOCK
+    volumes:
+      - "vaultlogs:/vault/logs"
+      - "vaultfile:/vault/file"
+    depends_on:
+      - db
+    command: server
+  web:
+    build:
+      context: build/docker/web
+      args:
+        http_proxy: ${http_proxy}
+    ports:
+      - "8443:8443"
+    depends_on:
+      - vault
+      - db
+    environment:
+      - SPRING_CLOUD_VAULT_APP_ROLE_SECRET_ID
 
 volumes:
   vaultlogs:
   vaultfile:
+  pgdata:
