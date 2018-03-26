@@ -15,6 +15,7 @@
  */
 package vaultdemo;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -33,8 +34,11 @@ public class VaultDemoService {
         SpringApplication.run(VaultDemoService.class, args);
     }
 
+    @Value("${who:World}")
+    private String who;
+
     @RequestMapping("")
     public String hello() {
-        return "Hello DevDay 18!";
+        return String.format("Hello %s!", who);
     }
 }

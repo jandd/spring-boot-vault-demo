@@ -46,6 +46,17 @@ docker-compose exec -e VAULT_CACERT=/vault/config/ssl/vault.crt.pem vault \
   vault token lookup
 ```
 
+> You might want to put the docker-compose command line into a shell script, as it will be used a lot later. The
+> following examples assume a `./vault_root.sh` with this content:
+>
+> ```
+> #!/bin/sh
+> docker-compose exec -e VAULT_CACERT=/vault/config/ssl/vault.crt.pem vault \
+>   -e VAULT_TOKEN=<token from vault_data.txt> \
+>   vault "$@"
+> 
+> ```
+
 ### Run the spring-boot application
 
 ```
@@ -64,9 +75,7 @@ On the first attempt running the application will fail with:
 Use vault to create a new application token:
 
 ```
-docker-compose exec -e VAULT_CACERT=/vault/config/ssl/vault.crt.pem vault \
-  -e VAULT_TOKEN=<token from vault_data.txt> \
-  vault token create -policy=default
+./vault_root.sh token create -policy=default
 ```
 
 Put the following block into `bootstrap.yml`:
@@ -116,9 +125,7 @@ curl -H "X-Vault-Token: <root token from vault_data.txt>" \
 Create a new token for the application:
 
 ```
-docker-compose exec -e VAULT_CACERT=/vault/config/ssl/vault.crt.pem vault \
-  -e VAULT_TOKEN=<token from vault_data.txt> \
-  vault token create -policy=hello-application
+./vault_root.sh token create -policy=hello-application
 ```
 
 Put the new token in `bootstrap.yml` and restart the application:
@@ -129,4 +136,36 @@ docker-compose stop web
 docker-compose up --build web
 ```
 
-Now the application starts without errors.
+Now the application starts without errors, check to see the response:
+
+```
+http :8080
+
+HTTP/1.1 200 
+Content-Length: 12
+Content-Type: text/plain;charset=UTF-8
+Date: Mon, 26 Mar 2018 09:21:56 GMT
+
+Hello World!
+```
+
+# Adding a secret to vault
+
+The application looks for a value named *who* at `secret/hello-vault`, add it to Vault:
+
+```
+./vault_root.sh write secret/hello-vault who=You
+```
+
+Restart the application and see the effect:
+
+```
+http :8080
+
+HTTP/1.1 200 
+Content-Length: 10
+Content-Type: text/plain;charset=UTF-8
+Date: Mon, 26 Mar 2018 09:24:39 GMT
+
+Hello You!
+```
