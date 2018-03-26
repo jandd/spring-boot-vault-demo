@@ -3,7 +3,7 @@ spring.cloud.vault:
   host: vault
   port: 8200
   scheme: https
-  authentication: token
+  authentication: approle
   ssl:
     trust-store: vault-truststore.jks
     trust-store-password: s3cr3t

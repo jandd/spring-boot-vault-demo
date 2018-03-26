@@ -20,6 +20,8 @@ services:
             - "8080:8080"
         depends_on:
           - vault
+        environment:
+          - SPRING_CLOUD_VAULT_APP_ROLE_SECRET_ID
 
 volumes:
   vaultlogs:

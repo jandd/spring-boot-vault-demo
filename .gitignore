@@ -9,5 +9,5 @@ vault/config/ssl
 vault/file
 vault_curl
 vault_data.txt
-*.iml
 vault_root.sh
+*.iml

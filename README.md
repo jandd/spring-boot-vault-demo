@@ -172,3 +172,34 @@ Date: Mon, 26 Mar 2018 09:24:39 GMT
 
 Hello You!
 ```
+
+# Approle authentication
+
+Vault Approle authentication credentials consists of an approle id and a secret id. Using these credentials the
+application retrieves a temporary token from Vault. The application role determines which policies are applied for
+the application.
+
+## Setup application role
+
+* enable approle authentication in vault
+  ```
+  ./vault_root.sh auth enable approle
+  ```
+* create the application role with the existing policy
+  ```
+  ./vault_root.sh write auth/approle/role/hello-vault policies=hello-application
+  ```
+* get the role-id from vault and put it into `bootstrap.yml`
+  ```
+  ./vault_root.sh read -field=role_id auth/approle/role/hello-vault/role-id
+  echo "spring.cloud.vault.app-role.role-id: <role-id>" > bootstrap.yml
+  ```
+* create a secret id and export it as environment variable
+  ```
+  ./vault_root.sh write -f auth/approle/role/hello-vault/secret-id
+  export SPRING_CLOUD_VAULT_APP_ROLE_SECRET_ID=<secret-id-from-vault>
+  ```
+* rebuild and run the web application container
+  ```
+  ./gradlew build && docker-compose up --build web
+  ```
