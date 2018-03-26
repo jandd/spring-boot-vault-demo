@@ -203,3 +203,72 @@ the application.
   ```
   ./gradlew build && docker-compose up --build web
   ```
+
+# Using the PKI secret engine
+
+Vault provides an integrated PKI system. The application uses this secret engine to obtain a dynamically generated
+server certificate.
+
+## Setup vault PKI
+
+* enable the pki secrets engine
+  ```
+  ./vault_root.sh secrets enable pki
+  ```
+* update the application policy to allow access to relevant pki paths
+  ```
+  curl -H "X-Vault-Token: <root token from vault_data.txt>" \
+    --cacert vault/config/ssl/vault.crt.pem \
+    --request PUT --data @./vault/hello-application.json \
+    https://localhost:8200/v1/sys/policy/hello-application 
+  ```
+* generate a root CA certificate for the pki secrets engine
+  ```
+  ./vault_root.sh write pki/root/generate/internal "common_name=Demo Vault CA"
+  ```
+* setup a pki role for server certificates
+  ```
+  ./vault_root.sh write pki/roles/server client_flag=false ttl=24h
+  ```
+* get the vault pki CA certificate
+  ```
+  curl --cacert vault/config/ssl/vault.crt.pem https://localhost:8200/v1/pki/ca/pem > vaultca.pem
+  ```
+
+## Run the spring-boot application
+
+* build and run
+  ```
+  ./gradlew build && docker-compose up --build web
+  ```
+* test the application
+  ```
+  http --default-scheme https --verify vaultca.pem :8443
+
+  HTTP/1.1 200 
+  Content-Length: 16
+  Content-Type: text/plain;charset=UTF-8
+  Date: Mon, 26 Mar 2018 14:04:53 GMT
+  
+  Hello DevDay 18!
+  ```
+* check that it is really TLS encrypted
+  ```
+  openssl s_client -connect localhost:8443 -CAfile vaultca.pem
+  CONNECTED(00000003)
+  depth=1 CN = Demo Vault CA
+  verify return:1
+  depth=0 CN = localhost
+  verify return:1
+  ---
+  Certificate chain
+   0 s:/CN=localhost
+     i:/CN=Demo Vault CA
+   1 s:/CN=Demo Vault CA
+     i:/CN=Demo Vault CA
+  ---
+  ...
+  SSL-Session:
+      Protocol  : TLSv1.2
+      Cipher    : ECDHE-RSA-AES256-GCM-SHA384
+  ```

@@ -1,3 +1,3 @@
 {
-  "policy": "path \"secret/*\" {\n capabilities = [\"read\", \"list\"]\n}"
+  "policy": "path \"secret/*\" {\n capabilities = [\"read\", \"list\"]\n}\n\npath \"pki/issue/server\" {\n capabilities = [\"update\"]\n}\n\npath \"pki/ca*\" {\n capabilities = [\"read\"]\n}"
 }

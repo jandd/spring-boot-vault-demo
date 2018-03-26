@@ -2,3 +2,5 @@ server:
   port: 8443
   ssl:
     enabled: true
+    trust-store-password:
+    key-store-password:
