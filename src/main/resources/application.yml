@@ -4,3 +4,13 @@ server:
     enabled: true
     trust-store-password:
     key-store-password:
+spring:
+  datasource:
+    url: jdbc:postgresql://db:5432/demoapp
+  data:
+    rest:
+      base-path: /data
+spring.jpa:
+  hibernate.ddl-auto: none
+  database-platform: org.hibernate.dialect.PostgreSQL9Dialect
+  properties.hibernate.temp.use_jdbc_metadata_defaults: false

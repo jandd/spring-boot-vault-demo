@@ -321,3 +321,8 @@ server certificate.
     --request PUT --data @./vault/hello-application.json \
     https://localhost:8200/v1/sys/policy/hello-application 
   ```
+* Run the application
+  ```
+  ./gradlew build && docker compose up --build web
+  ```
+* Test the `/data/messages` REST endpoint to interact with the database

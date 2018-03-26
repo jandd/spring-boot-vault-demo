@@ -7,3 +7,6 @@ spring.cloud.vault:
   ssl:
     trust-store: vault-truststore.jks
     trust-store-password: s3cr3t
+  database:
+    enabled: true
+    role: springdemo
