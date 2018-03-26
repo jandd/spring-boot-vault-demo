@@ -113,13 +113,13 @@ Now the application starts, but we get the following log messages (lines wrapped
 This is caused by Vaults default policy ACLs that do not allow access to the `secret` path.
 
 Add a new policy to allow access for the application, use [Vault's API]() to do this (docker-compose cannot access local
-files) that are not shared with the vault container in advance):
+files that are not shared with the vault container in advance):
 
 ```
 curl -H "X-Vault-Token: <root token from vault_data.txt>" \
   --cacert vault/config/ssl/vault.crt.pem \
   --request PUT --data @./vault/hello-application.json \
-  https://localhost:8200/api/v1/sys/policy/hello-application 
+  https://localhost:8200/v1/sys/policy/hello-application 
 ```
 
 Create a new token for the application:
