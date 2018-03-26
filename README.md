@@ -51,3 +51,6 @@ docker-compose exec -e VAULT_CACERT=/vault/config/ssl/vault.crt.pem vault \
 ```
 docker-compose up --build web
 ```
+
+> To run the spring-boot application from within an IDE you need to copy `build/resources/main/vault-truststore.jks`
+> to `src/main/resources` so that it is on the classpath.
