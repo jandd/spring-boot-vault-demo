@@ -1,0 +1,21 @@
+{
+  "ui": "true",
+  "max_lease_ttl": "2160h",
+  "default_lease_ttl": "2160h",
+  "backend": [
+    {
+      "file": {
+        "path": "/vault/file"
+      }
+    }
+  ],
+  "listener": [
+    {
+      "tcp": {
+        "address": "0.0.0.0:8200",
+        "tls_cert_file": "/vault/config/ssl/vault.crt.pem",
+        "tls_key_file": "/vault/config/ssl/private/vault.key.pem"
+      }
+    }
+  ]
+}
