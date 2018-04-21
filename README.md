@@ -296,13 +296,14 @@ server certificate.
 * Setup the connection from Vault to PostgreSQL
   ```
   ./vault_root.sh write database/config/demodb plugin_name=postgresql-database-plugin allowed_roles=springdemo \
-    connection_url="postgresql://vaultadmin:superinsecure@db:5432/demoapp?sslmode=disable"
+    connection_url="postgresql://{{username}}:{{password}}@db:5432/demoapp?sslmode=disable" \
+    username="vaultadmin" \
+    password="superinsecure"
   ```
   > You should enable SSL for your PostgreSQL server in production and set a better password for the vault user!
 * Create a database role definition for the spring demo application
   ```
-  docker-compose exec -e VAULT_CACERT=/vault/config/ssl/vault.crt.pem -e VAULT_TOKEN=<token from vault_data.txt> \
-    vault vault write database/roles/springdemo db_name=demodb \
+  ./vault_root.sh write database/roles/springdemo db_name=demodb \
     "creation_statements=CREATE ROLE \"{{name}}\" IN ROLE grp_demo_app_user LOGIN PASSWORD '{{password}}' VALID UNTIL '{{expiration}}';" \
     default_ttl=24h max_ttl=72h
   ```
@@ -326,3 +327,7 @@ server certificate.
   ./gradlew build && docker compose up --build web
   ```
 * Test the `/data/messages` REST endpoint to interact with the database
+  ```
+  http --verify vaultca.pem --default-scheme https :8443/data/messages message="Test message"
+  http --verify vaultca.pem --default-scheme https :8443/data/messages
+  ```
