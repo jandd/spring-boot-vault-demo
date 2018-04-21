@@ -41,6 +41,9 @@ bootJar {
 
 repositories {
     mavenCentral()
+    maven {
+        url 'https://repo.spring.io/libs-milestone'
+    }
 }
 
 sourceCompatibility = 1.8
