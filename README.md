@@ -25,7 +25,7 @@ docker-compose up --build vault
 Initialize Vault:
 
 ```
-docker-compose --no-ansi exec -e VAULT_CACERT=/vault/config/ssl/vault.crt.pem vault \
+docker-compose --no-ansi exec -e VAULT_CLI_NO_COLOR=1 -e VAULT_CACERT=/vault/config/ssl/vault.crt.pem vault \
   vault operator init -key-shares=1 -key-threshold=1 > vault_data.txt
 ```
 
@@ -34,7 +34,7 @@ Keep the information you will need the root token and unseal key later.
 Unseal Vault:
 
 ```
-docker-compose exec -e VAULT_CLI_NO_COLOR=1 -e VAULT_CACERT=/vault/config/ssl/vault.crt.pem vault \
+docker-compose exec -e VAULT_CACERT=/vault/config/ssl/vault.crt.pem vault \
   vault operator unseal <unseal key from vault_data.txt>
 ```
 
@@ -51,10 +51,12 @@ docker-compose exec -e VAULT_CACERT=/vault/config/ssl/vault.crt.pem vault \
 >
 > ```
 > #!/bin/sh
-> docker-compose exec -e VAULT_CACERT=/vault/config/ssl/vault.crt.pem vault \
->   -e VAULT_TOKEN=<token from vault_data.txt> \
->   vault "$@"
+> set -e
 > 
+> docker-compose exec \
+>   -e VAULT_CACERT=/vault/config/ssl/vault.crt.pem \  
+>   -e VAULT_TOKEN=<token from vault_data.txt> \
+>   vault vault "$@"
 > ```
 
 ### Run the spring-boot application
