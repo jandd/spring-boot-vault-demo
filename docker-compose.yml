@@ -3,7 +3,6 @@ services:
     vault:
         build:
             context: build/docker/vault
-        image: "vault:0.9.5"
         ports:
             - "8200:8200"
         cap_add:

@@ -92,7 +92,7 @@ task createWebDockerfile(type: Dockerfile) {
 
 task createVaultDockerfile(type: Dockerfile) {
     destFile = project.file('build/docker/vault/Dockerfile')
-    from 'vault:0.9.6'
+    from 'vault:0.10.0'
     maintainer "Jan Dittberner <jan.dittberner@t-systems.com>"
     copyFile 'config', '/vault/config'
     runCommand  'chown -R vault:vault /vault/config'
