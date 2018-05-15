@@ -51,7 +51,7 @@ targetCompatibility = 1.8
 
 dependencyManagement {
     imports {
-        mavenBom 'org.springframework.cloud:spring-cloud-vault-dependencies:2.0.0.M6'
+        mavenBom 'org.springframework.cloud:spring-cloud-vault-dependencies:2.0.0.RC1'
     }
 }
 
