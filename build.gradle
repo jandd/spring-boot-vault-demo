@@ -22,7 +22,7 @@ buildscript {
         }
     }
     dependencies {
-        classpath('org.springframework.boot:spring-boot-gradle-plugin:2.0.1.RELEASE')
+        classpath('org.springframework.boot:spring-boot-gradle-plugin:2.0.2.RELEASE')
         classpath('com.bmuschko:gradle-docker-plugin:3.2.5')
     }
 }
@@ -51,7 +51,7 @@ targetCompatibility = 1.8
 
 dependencyManagement {
     imports {
-        mavenBom 'org.springframework.cloud:spring-cloud-vault-dependencies:2.0.0.M6'
+        mavenBom 'org.springframework.cloud:spring-cloud-vault-dependencies:2.0.0.RC1'
     }
 }
 
@@ -96,7 +96,7 @@ task createWebDockerfile(type: Dockerfile) {
 
 task createVaultDockerfile(type: Dockerfile) {
     destFile = project.file('build/docker/vault/Dockerfile')
-    from 'vault:0.10.0'
+    from 'vault:0.10.1'
     maintainer "Jan Dittberner <jan.dittberner@t-systems.com>"
     copyFile 'config', '/vault/config'
     runCommand  'chown -R vault:vault /vault/config'
